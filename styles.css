@@ -1,0 +1,86 @@
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100vh;
+}
+
+#mapid {
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    height: 100vh;
+    transition: margin-left .5s;
+    z-index: 0;
+}
+
+.sidebar {
+    margin: 0;
+    padding: 10px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: auto;
+    height: 100vh;
+    z-index: 1;
+    background-color: rgb(30, 30, 30);
+    color: white;
+    transition: 0.5s;
+}
+
+.sidebar-title {
+    width:100%;
+    margin-bottom: 5px;
+    text-align: right;
+    cursor: pointer;
+}
+
+.sidebar-body {
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    overflow: auto;
+    display: none;
+}
+
+.navbar-button {
+    width: 200px;
+    margin: 0;
+    padding: 10px;
+    background-color: rgb(30, 30, 30);
+    color: white;
+    border: solid 1px white;
+    border-radius: 4px;
+    display: block;
+}
+
+.navbar-button:hover {
+    background-color: rgb(75, 75, 75);
+}
+
+.infobar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 30px;
+    z-index: 1;
+    background-color: rgb(30, 30, 30);
+    color: white;
+    text-align: center;
+    opacity: 0.85;
+}
+
+.navbar-combobox {
+    width: 200px;
+    margin: 0;
+    padding: 10px;
+    background-color: rgb(30, 30, 30);
+    color: white;
+    border: solid 1px white;
+    border-radius: 4px;
+}
+
+.navbar-combobox:hover {
+    background-color: rgb(75, 75, 75);
+}

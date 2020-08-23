@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+    <head>
+	    <title>LeafletTest</title>
+	    <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <!-- Styles CSS -->
+        <link rel="stylesheet" href="styles.css"/>
+
+        <!-- Leaflet CSS and JS -->
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin=""/>
+        <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js" integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew==" crossorigin=""></script>
+        
+        <!-- Leaflet KML plugin JS -->
+        <script src="L.KML.js"></script>
+
+        <!-- jQuery JS -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    </head>
+    <body>
+        <div id="sidebarid" class="sidebar">
+            <div class="sidebar-title" onclick="flipNav()">
+                <svg width="2em" height="2em" viewBox="0 0 16 16" class="bi bi-menu-button" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M0 1.5A1.5 1.5 0 0 1 1.5 0h8A1.5 1.5 0 0 1 11 1.5v2A1.5 1.5 0 0 1 9.5 5h-8A1.5 1.5 0 0 1 0 3.5v-2zM1.5 1a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5h-8zM14 7H2a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zM2 6a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2H2z"/>
+                    <path fill-rule="evenodd" d="M15 11H1v-1h14v1zM2 12.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5z"/>
+                    <path d="M7.823 2.823l-.396-.396A.25.25 0 0 1 7.604 2h.792a.25.25 0 0 1 .177.427l-.396.396a.25.25 0 0 1-.354 0z"/>
+                </svg>
+            </div>
+            <div id="sidebarBody" class="sidebar-body">
+                <input type="file" id="kmlFileInput" accept=".kml" style="display: none"/>
+                <input type="button" onclick="document.getElementById('kmlFileInput').click()" value="Import kml" class="navbar-button"/>
+                <input type="file" id="jsonFileInput" accept=".json, .geojson" style="display: none"/>
+                <input type="button" onclick="document.getElementById('jsonFileInput').click()" value="Import GeoJSON" class="navbar-button"/>
+                <select id="mapTypeInput" class="navbar-combobox">
+                    <option value="OSM_Mapnik" selected>OSM.Mapnik</option>
+                    <option value="OSM_DE">OSM.DE</option>
+                    <option value="OSM_France">OSM.France</option>
+                    <option value="OSM_HOT">OSM.HOT</option>
+                    <option value="OpenTopoMap">OpenTopoMap</option>
+                    <option value="Stadia_AlidadeSmooth">Stadia.AlidadeSmooth</option>
+                    <option value="Stadia_AlidadeSmoothDark">Stadia.AlidadeSmoothDark</option>
+                    <option value="Stadia_OSMBright">Stadia.OSMBright</option>
+                    <option value="Stadia_Outdoors">Stadia.Outdoors</option>
+                    <option value="Thunderforest_OpenCycleMap">Thunderforest.OpenCycleMap</option>
+                    <option value="Thunderforest_Transport">Thunderforest.Transport</option>
+                    <option value="Thunderforest_TransportDark">Thunderforest.TransportDark</option>
+                    <option value="Thunderforest_Landscape">Thunderforest.Landscape</option>
+                    <option value="Thunderforest_Outdoors">Thunderforest.Outdoors</option>
+                    <option value="Thunderforest_Pioneer">Thunderforest.Pioneer</option>
+                    <option value="Thunderforest_MobileAtlas">Thunderforest.MobilAtlas</option>
+                    <option value="CyclOSM">CyclOSM</option>
+                    <option value="MtbMap">MtbMap</option>
+                    <option value="HikeBike">HikeBike</option>
+                </select>
+            </div>
+        </div>
+        <div id="mapid"></div>
+        <div id="infoBar" class="infobar"></div>
+        <script>
+            var navBarBody = document.getElementById("sidebarBody");
+	        var mymap = L.map('mapid').setView([51.505, -0.09], 13);
+            var popup = L.popup();
+            var kmlFileInput = document.getElementById("kmlFileInput");
+            var jsonFileInput = document.getElementById("jsonFileInput");
+            var mapTypeInput = document.getElementById("mapTypeInput");
+            var infoBar = document.getElementById("infoBar");
+            var tileLayers = {
+                OSM_Mapnik: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }),
+                OSM_DE: L.tileLayer('https://{s}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png', {
+                    maxZoom: 18,
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }),
+                OSM_France: L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+                    maxZoom: 20,
+                    attribution: '&copy; Openstreetmap France | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }),
+                OSM_HOT: L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">Humanitarian OpenStreetMap Team</a> hosted by <a href="https://openstreetmap.fr/" target="_blank">OpenStreetMap France</a>'
+                }),
+                OpenTopoMap: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 17,
+                    attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+                }),
+                Stadia_AlidadeSmooth: L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png', {
+                    maxZoom: 20,
+                    attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+                }),
+                Stadia_AlidadeSmoothDark: L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
+                    maxZoom: 20,
+                    attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+                }),
+                Stadia_OSMBright: L.tileLayer('https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png', {
+                    maxZoom: 20,
+	                attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+                }),
+                Stadia_Outdoors: L.tileLayer('https://tiles.stadiamaps.com/tiles/outdoors/{z}/{x}/{y}{r}.png', {
+	                maxZoom: 20,
+	                attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+                }),
+                Thunderforest_OpenCycleMap: L.tileLayer('https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey={apikey}', {
+	                attribution: '&copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	                apikey: '<your apikey>',
+	                maxZoom: 22
+                }),
+                Thunderforest_Transport: L.tileLayer('https://{s}.tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey={apikey}', {
+	                attribution: '&copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	                apikey: '<your apikey>',
+	                maxZoom: 22
+                }),
+                Thunderforest_TransportDark: L.tileLayer('https://{s}.tile.thunderforest.com/transport-dark/{z}/{x}/{y}.png?apikey={apikey}', {
+	                attribution: '&copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	                apikey: '<your apikey>',
+	                maxZoom: 22
+                }),
+                Thunderforest_Landscape: L.tileLayer('https://{s}.tile.thunderforest.com/landscape/{z}/{x}/{y}.png?apikey={apikey}', {
+	                attribution: '&copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	                apikey: '<your apikey>',
+	                maxZoom: 22
+                }),
+                Thunderforest_Outdoors: L.tileLayer('https://{s}.tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey={apikey}', {
+	                attribution: '&copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	                apikey: '<your apikey>',
+	                maxZoom: 22
+                }),
+                Thunderforest_Pioneer: L.tileLayer('https://{s}.tile.thunderforest.com/pioneer/{z}/{x}/{y}.png?apikey={apikey}', {
+	                attribution: '&copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	                apikey: '<your apikey>',
+	                maxZoom: 22
+                }),
+                Thunderforest_MobileAtlas: L.tileLayer('https://{s}.tile.thunderforest.com/mobile-atlas/{z}/{x}/{y}.png?apikey={apikey}', {
+	                attribution: '&copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	                apikey: '<your apikey>',
+	                maxZoom: 22
+                }),
+                CyclOSM: L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', {
+	                maxZoom: 20,
+	                attribution: '<a href="https://github.com/cyclosm/cyclosm-cartocss-style/releases" title="CyclOSM - Open Bicycle render">CyclOSM</a> | Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }),
+                MtbMap: L.tileLayer('http://tile.mtbmap.cz/mtbmap_tiles/{z}/{x}/{y}.png', {
+	                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &amp; USGS'
+                }),
+                HikeBike: L.tileLayer('https://tiles.wmflabs.org/hikebike/{z}/{x}/{y}.png', {
+	                maxZoom: 19,
+	                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                })
+            }
+
+            tileLayers.OSM_Mapnik.addTo(mymap);
+
+	        function onMapClick(e) {
+		        popup
+			    .setLatLng(e.latlng)
+			    .setContent("You clicked the map at " + e.latlng.toString())
+			    .openOn(mymap);
+	        }
+
+            function onMapMouseMove(e) {
+                infoBar.innerHTML = e.latlng.toString();
+            }
+
+	        mymap.on('click', onMapClick);
+            mymap.on('mousemove', onMapMouseMove);
+
+            function flipNav() {
+                this.navBarBody.style.display = ((this.navBarBody.style.display != "block") ? "block" : "none")
+            }
+
+            kmlFileInput.onchange = function(event) {
+                var file = URL.createObjectURL(kmlFileInput.files[0]);
+                flipNav();
+                // Load kml file
+                fetch(file)
+                    .then(res => res.text())
+                    .then(kmltext => {
+                        // Create new kml overlay
+                        const parser = new DOMParser();
+                        const kml = parser.parseFromString(kmltext, 'text/xml');
+                        const track = new L.KML(kml);
+                        mymap.addLayer(track);
+
+                        // Adjust map to show the kml
+                        const bounds = track.getBounds();
+                        mymap.fitBounds(bounds);
+                    }
+                );
+            }
+
+            jsonFileInput.onchange = function(event) {
+                var file = URL.createObjectURL(jsonFileInput.files[0]);
+                flipNav();
+                // Load GeoJSON file
+                $.getJSON(file, function(data){
+                    var geojsonfeatures = L.geoJson(data).addTo(mymap);
+                    mymap.fitBounds(geojsonfeatures.getBounds());
+                });
+            }
+
+            mapTypeInput.onchange = function(event) {
+                tileLayers[mapTypeInput.options[mapTypeInput.selectedIndex].value].addTo(mymap);
+            }
+        </script>
+    </body>
+</html>
